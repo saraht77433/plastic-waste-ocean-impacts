@@ -1,0 +1,146 @@
+---
+title: "Milestone 4"
+author: "Sarah Theriot"
+date: "2025-02-04"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Step 1. Load Necessary Libraries
+## We must first begin by loading the necessary libraries we will utilize for our analysis.
+```{r loading libraries}
+# Load necessary libraries
+library(dplyr)
+library(ggplot2)
+library(readr)
+library(tidyr)
+```
+
+# Step 2: Loading the Datasets
+## Now we will load the three datasets that we will be using.
+```{r load datasets}
+# Load the three datasets
+dataset1 <- read.csv("C:/Users/sarah/OneDrive/Desktop/MSDS/Predictive Analytics/Term Project/Dataset/2- share-of-global-plastic-waste-emitted-to-the-ocean.csv")
+dataset2 <- read.csv("C:/Users/sarah/OneDrive/Desktop/MSDS/Predictive Analytics/Term Project/Dataset/4- mismanaged-plastic-waste-per-capita.csv")
+dataset3 <- read.csv("C:/Users/sarah/OneDrive/Desktop/MSDS/Predictive Analytics/Term Project/Dataset/Plastic Waste Around the World.csv")
+
+# Preview the first few rows of each dataset to understand their structure
+head(dataset1)
+head(dataset2)
+head(dataset3)
+
+```
+
+# Step 3: Inspecting and Cleaning the Datasets
+## We must inspect and then clean our datasets. We want to make sure that our column names are consistent across all datasets.
+
+```{r inspect and clean}
+# Convert 'Country' columns to character type in all datasets
+dataset1$Country <- as.character(dataset1$Country)
+dataset2$Country <- as.character(dataset2$Country)
+dataset3$Country <- as.character(dataset3$Country)
+
+# Check column types to confirm consistency
+str(dataset1)
+str(dataset2)
+str(dataset3)
+
+# Remove rows where 'Country' is missing in any of the datasets
+dataset1 <- dataset1 %>% filter(!is.na(Country))
+dataset2 <- dataset2 %>% filter(!is.na(Country))
+dataset3 <- dataset3 %>% filter(!is.na(Country))
+
+# Check the number of rows after cleaning
+nrow(dataset1)
+nrow(dataset2)
+nrow(dataset3)
+
+```
+
+# Step 4: Merge the Datasets
+## Now, we will merge the datasets on the country variable. 
+
+```{r merge datasets}
+# Merging the datasets on 'Country'
+combined_data <- dataset1 %>%
+  left_join(dataset2, by = "Country") %>%
+  left_join(dataset3, by = "Country")
+
+# View the first few rows of the combined dataset to check the merge
+head(combined_data)
+
+```
+
+# Step 5: Inspect the Merged Data
+
+```{r missing data}
+# Check column names in each dataset
+colnames(dataset1)
+colnames(dataset2)
+colnames(dataset3)
+
+# Inspect the structure of the combined dataset
+str(combined_data)
+
+# Check the first few rows of the combined data
+head(combined_data)
+
+# Visualizing the relationship between two variables (example: total plastic waste vs. recycling rate)
+ggplot(combined_data, aes(x = Total_Plastic_Waste_MT, y = Recycling_Rate)) +
+  geom_point() +
+  labs(title = "Plastic Waste vs Recycling Rate", x = "Total Plastic Waste (Million Tons)", y = "Recycling Rate (%)")
+```
+
+# Step 6: Exploratory Data Anlalysis
+## Now that we have cleaned our data, we must perform an EDA.
+
+```{r EDA}
+## Summary statistics of the combined dataset
+summary(combined_data)
+
+# Visualizations
+
+## Histogram for 'Total Plastic Waste (MT)'
+ggplot(combined_data, aes(x = Total_Plastic_Waste_MT)) +
+  geom_histogram(bins = 20, fill = "blue", color = "black") +
+  labs(title = "Histogram of Total Plastic Waste (MT)", x = "Total Plastic Waste (MT)", y = "Frequency")
+
+## Boxplot for 'Share of Global Plastics Emitted to Ocean'
+ggplot(combined_data, aes(x = Share.of.global.plastics.emitted.to.ocean)) +
+  geom_boxplot(fill = "green") +
+  labs(title = "Boxplot of Share of Global Plastics Emitted to Ocean", x = "Share of Plastics Emitted", y = "Value")
+
+# Correlation Matrix
+
+# Compute the correlation matrix, handling NAs
+correlation_matrix <- cor(combined_data[, sapply(combined_data, is.numeric)], use = "complete.obs")
+
+# Check if the correlation matrix has been computed correctly
+print(correlation_matrix)
+
+```
+
+# Step 7: Linear Regression
+
+```{r linear regression}
+# Linear regression to predict Share of Global Plastics Emitted to Ocean
+linear_model <- lm(Share.of.global.plastics.emitted.to.ocean ~ Total_Plastic_Waste_MT + Recycling_Rate, data = combined_data)
+
+# Summary of the linear regression model
+summary(linear_model)
+
+# Predictions from the linear regression model
+predictions <- predict(linear_model, newdata = combined_data)
+
+# Visualizing the Actual vs Predicted values
+ggplot(combined_data, aes(x = Share.of.global.plastics.emitted.to.ocean, y = predictions)) +
+  geom_point() +
+  labs(title = "Actual vs Predicted: Share of Global Plastics Emitted to Ocean", 
+       x = "Actual", y = "Predicted")
+```
+
+
+```
+
